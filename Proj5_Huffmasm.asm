@@ -22,9 +22,11 @@ intro_prompt	BYTE	"                   Array, Median, and Sorted Array         by
 				BYTE	"The program will then take this list and display the median and the list in ascending order.",13,10
 				BYTE	"Finally, the total count of each number that occurred will be displayed to the user.",13,10,13,10,0
 initial_array	BYTE	"The initial array:",13,10,13,10,0
+sorted_array	BYTE	"The sorted array:",13,10,13,10,0
+median			BYTE	"The median is: ",0
 randArray		DWORD	ARRAYSIZE dup(?)
 count			DWORD	?
-row_count		DWORD	0
+
 
 
 .code
@@ -39,10 +41,25 @@ main PROC
 	push count
 	call fillArray
 
-	push row_count
-	push OFFSET randArray
+	
 	push count
 	push OFFSET initial_array
+	push OFFSET randArray
+	call displayList
+	call CrLf
+	
+
+	push OFFSET randArray 
+	call sortList
+
+	push OFFSET median
+	push randArray
+	call displayMedian
+	call CrLf
+	call CrLf
+
+	push OFFSET sorted_array
+	push OFFSET randArray
 	call displayList
 
 	Invoke ExitProcess,0	; exit to operating system
@@ -72,7 +89,7 @@ introduction PROC
 	popad
 	pop		EBP
 
-	ret		
+	ret		8
 introduction ENDP
 
 ;---------------------------------------------------------------
@@ -94,7 +111,7 @@ fillArray PROC
 	
 	push	EBP
 	mov		EBP, ESP
-	mov		ECX, arraySize		;loops until ARRAYSIZE constant is 0
+	mov		ECX, ARRAYSIZE			;loops until ARRAYSIZE constant is 0
 	mov		ESI, [EBP + 12]			;address of array in esi		
 	cmp		ECX, 0
 	je		_endLoop
@@ -108,11 +125,9 @@ fillArray PROC
 		add		ESI, TYPE DWORD	
 		LOOP	_arrayLoop			
 
-	
-
 	_endLoop:
 		pop	EBP
-		ret 8
+		ret 12
 fillArray ENDP
 
 ;---------------------------------------------------------------
@@ -133,20 +148,20 @@ displayList PROC
 	
 	push	EBP
 	mov		EBP, ESP
-	mov		EDX, [EBP+8]			;array message
-	mov		ESI, [EBP + 16]			;address of array
-	mov		ECX, arraySize			;address of count
-	mov		EBX, [EBP + 20]
+	mov		EDX, [EBP+12]			;array message
+	mov		ESI, [EBP + 8]			;address of array
+	mov		ECX, ARRAYSIZE			;address of count
+	mov		EBX, 0
 
 	call	WriteString
 		
 		_displayLoop:
-			mov		EAX, [ESI]
+			mov		EAX, [ESI]			;first element in array
 			call	WriteDec
-			mov		al, ' '
+			mov		al, ' '				;spaces between numbers
 			call	WriteChar
-			add		ESI, TYPE DWORD
-			inc		EBX
+			add		ESI, TYPE DWORD		;move to next element in array
+			inc		EBX					;increment number in that row, once row is at 20, new row
 			cmp		EBX, 20
 			je		_newRow
 			LOOP	_displayLoop
@@ -159,5 +174,99 @@ displayList PROC
 	pop		EBP
 	ret 12
 displayList ENDP
+
+;---------------------------------------------------------------
+;Name: sortList
+;
+;This procedure displays the array with 20 numbers per line
+;
+;preconditions: none
+;
+;postconditions: 
+;
+;receives:	address of array on system stack
+;
+;returns: None
+;---------------------------------------------------------------
+
+sortList PROC
+	push	EBP
+	mov		EBP, ESP
+	mov		ECX, ARRAYSIZE
+	dec		ECX								;array starts at position '0'
+		
+		_bubblesortL1:
+			push	ECX
+			mov		ESI, [EBP + 8]			;pointer to first number in array
+
+		_bubblesortL2:
+			mov		EAX, [ESI]				;move start of array in to eax
+			mov		EBX, [ESI+4]
+			cmp		EBX, EAX			;compare the next item in array to eax
+			jg		_bubblesortL3			;if num is less than current eax, swap positions in memory
+			push	ESI
+			call	exchangeElements		;move the updated value to the current position 
+			pop		ESI
+		
+		_bubblesortL3:
+			add		ESI, 4					;move to the next number in the array
+			LOOP	_bubblesortL2			;loop through comparing each number with the current position
+			pop		ECX						;restore the outer loop counter
+			LOOP	_bubblesortL1			;loop through each number in the array 
+	
+	
+	pop	EBP
+	ret 12
+sortList ENDP
+
+;---------------------------------------------------------------
+;Name: exchangeElements
+;
+;This procedure displays the array with 20 numbers per line
+;
+;preconditions: none
+;
+;postconditions: 
+;
+;receives:	address of array on system stack
+;
+;returns: None
+;---------------------------------------------------------------
+exchangeElements PROC
+	mov		EAX, [ESI]
+	mov		EBX, [ESI+4]
+	mov		[ESI+4], EAX
+	mov		[ESI], EBX
+	
+	ret	
+exchangeElements ENDP
+
+
+;---------------------------------------------------------------
+;Name: displayMedian
+;
+;This procedure displays the array with 20 numbers per line
+;
+;preconditions: none
+;
+;postconditions: 
+;
+;receives:	address of array on system stack
+;
+;returns: None
+;---------------------------------------------------------------
+
+displayMedian PROC
+	push	EBP
+	mov		EBP, ESP
+	mov		EDX, [EBP+12]
+	mov		ECX, ARRAYSIZE
+	call	WriteString
+
+	
+	pop		EBP
+	ret		12
+displayMedian ENDP
+
 
 END main
