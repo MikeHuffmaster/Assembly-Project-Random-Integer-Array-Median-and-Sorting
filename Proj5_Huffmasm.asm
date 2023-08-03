@@ -13,7 +13,7 @@ INCLUDE Irvine32.inc
 
 LO = 15
 HI = 50
-ARRAYSIZE = 200
+ARRAYSIZE = 199
 
 .data
 
@@ -53,7 +53,7 @@ main PROC
 	call sortList
 
 	push OFFSET median
-	push randArray
+	push OFFSET randArray
 	call displayMedian
 	call CrLf
 	call CrLf
@@ -154,8 +154,10 @@ displayList PROC
 	mov		EBX, 0
 
 	call	WriteString
-		
+	inc		ECX	
 		_displayLoop:
+			cmp		ECX, 1
+			je		_break
 			mov		EAX, [ESI]			;first element in array
 			call	WriteDec
 			mov		al, ' '				;spaces between numbers
@@ -163,7 +165,7 @@ displayList PROC
 			add		ESI, TYPE DWORD		;move to next element in array
 			inc		EBX					;increment number in that row, once row is at 20, new row
 			cmp		EBX, 20
-			je		_newRow
+			je		_newRow			
 			LOOP	_displayLoop
 
 		_newRow:
@@ -171,8 +173,9 @@ displayList PROC
 			call	CrLf
 			LOOP	_displayLoop
 
-	pop		EBP
-	ret 12
+	_break:
+		pop		EBP
+		ret 12
 displayList ENDP
 
 ;---------------------------------------------------------------
@@ -202,11 +205,12 @@ sortList PROC
 		_bubblesortL2:
 			mov		EAX, [ESI]				;move start of array in to eax
 			mov		EBX, [ESI+4]
-			cmp		EBX, EAX			;compare the next item in array to eax
+			cmp		EBX, EAX				;compare the next item in array to eax
 			jg		_bubblesortL3			;if num is less than current eax, swap positions in memory
-			push	ESI
+			pushad
 			call	exchangeElements		;move the updated value to the current position 
-			pop		ESI
+			popad
+
 		
 		_bubblesortL3:
 			add		ESI, 4					;move to the next number in the array
@@ -233,12 +237,15 @@ sortList ENDP
 ;returns: None
 ;---------------------------------------------------------------
 exchangeElements PROC
+	push	EBP
+	mov		EBP, ESP
 	mov		EAX, [ESI]
 	mov		EBX, [ESI+4]
 	mov		[ESI+4], EAX
 	mov		[ESI], EBX
 	
-	ret	
+	pop		EBP
+	ret		
 exchangeElements ENDP
 
 
@@ -259,13 +266,68 @@ exchangeElements ENDP
 displayMedian PROC
 	push	EBP
 	mov		EBP, ESP
-	mov		EDX, [EBP+12]
-	mov		ECX, ARRAYSIZE
+	mov     ESI, [EBP+8]
+	pushad
+	mov		EDX, [EBP + 12]
 	call	WriteString
+	mov		EAX, ARRAYSIZE
+	mov		EDX, 0
+	mov		EBX, 2
+	div		EBX
+	cmp		EDX, 1
+	je		_odd
+	jmp		_even
 
+	_odd:
+		call	CrLf
+		mov		EAX, ARRAYSIZE
+		dec		EAX
+		mov		EDX, 0
+		mov		ECX, 2
+		div		ECX
+		mov		EAX, [ESI + EAX * 4]
+		call	WriteDec
+		jmp		_return
+		;add one to number and get that element and display that element
+		
+   
+	_even:
+		;first get the median location of the array
+		
+		mov		EBX, EAX
+		dec		EAX
+		add		EAX, EBX
+		mov		EDX, 0
+		mov		ECX, 2
+		div		ECX
+
+		;once median is obtained, mult by 4 to obtain element position in array to obtain the two median numbers
+		mov		EDX, 4
+		mul		EDX
+		mov		EBX, [ESI + EAX]
+		mov		EAX, [ESI + 4 + EAX]	
 	
-	pop		EBP
-	ret		12
+		
+		
+		;add both element numbers and divide
+		add		EAX, EBX
+		mov		EDX, 0
+		mov		ECX, 2
+		div		ECX
+		cmp		EDX, 1
+		je		_roundUp
+		call	WriteDec
+		jmp		_return
+
+	_roundUp:
+		inc		EAX
+		call	WriteDec
+    ;     median = (array[n / 2] + array[(n / 2) - 1]) / 2
+
+	_return:
+		popad
+		pop		EBP
+		ret		12
 displayMedian ENDP
 
 
