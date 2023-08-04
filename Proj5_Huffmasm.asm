@@ -1,10 +1,10 @@
 TITLE Project 5     (Proj5_Huffmasm.asm)
 
 ; Author: Mike Huffmaster
-; Last Modified:
+; Last Modified:8/3/2023
 ; OSU email address: Huffmasm@oregonstate.edu
 ; Course number/section:   CS271 Section 400
-; Project Number:Project 5            Due Date:
+; Project Number:Project 5            Due Date:08/13/2023
 ; Description: The user will be introduced to the program. This program will create a list of 200 random 
 ;	integers in the range of 15 to 50. The program will then display the median, and the sorted list in ascending order. 
 ;	Lastly,the count of each number in the list will be displayed.
@@ -13,7 +13,7 @@ INCLUDE Irvine32.inc
 
 LO = 15
 HI = 50
-ARRAYSIZE = 199
+ARRAYSIZE = 200
 
 .data
 
@@ -24,8 +24,10 @@ intro_prompt	BYTE	"                   Array, Median, and Sorted Array         by
 initial_array	BYTE	"The initial array:",13,10,13,10,0
 sorted_array	BYTE	"The sorted array:",13,10,13,10,0
 median			BYTE	"The median is: ",0
+count_prompt	BYTE	"The counts of each number ordered from least to greastest is: ",13,10,13,10,0
 randArray		DWORD	ARRAYSIZE dup(?)
-count			DWORD	?
+counts			DWORD	HI-LO dup(0)
+loop_count		DWORD	?
 
 
 
@@ -37,12 +39,11 @@ main PROC
 	push OFFSET intro_prompt
 	call introduction
 	
+	push OFFSET loop_count
 	push OFFSET randArray
-	push count
 	call fillArray
 
-	
-	push count
+	push loop_count
 	push OFFSET initial_array
 	push OFFSET randArray
 	call displayList
@@ -58,8 +59,21 @@ main PROC
 	call CrLf
 	call CrLf
 
+	push loop_count
 	push OFFSET sorted_array
 	push OFFSET randArray
+	call displayList
+
+	push OFFSET loop_count
+	push OFFSET counts
+	push OFFSET randArray
+	call countList
+	call CrLf
+	call CrLf
+
+	push loop_count
+	push OFFSET count_prompt
+	push OFFSET counts
 	call displayList
 
 	Invoke ExitProcess,0	; exit to operating system
@@ -111,18 +125,21 @@ fillArray PROC
 	
 	push	EBP
 	mov		EBP, ESP
-	mov		ECX, ARRAYSIZE			;loops until ARRAYSIZE constant is 0
-	mov		ESI, [EBP + 12]			;address of array in esi		
+	mov		EBX, [EBP + 12]
+	mov		ECX, ARRAYSIZE
+	mov		[EBX], ECX			;loops until ARRAYSIZE constant is 0
+	mov		ESI, [EBP + 8]			;address of array in esi		
 	cmp		ECX, 0
 	je		_endLoop
 
 	_arrayLoop:
 		mov		EAX, HI
+		inc		EAX
 		sub		EAX, LO
 		call	RandomRange			;generate a random number 
 		add		EAX, LO				;add LO to the number to be within bounds
 		mov		[ESI], EAX			;add number to array
-		add		ESI, TYPE DWORD	
+		add		ESI, 4
 		LOOP	_arrayLoop			
 
 	_endLoop:
@@ -150,7 +167,7 @@ displayList PROC
 	mov		EBP, ESP
 	mov		EDX, [EBP+12]			;array message
 	mov		ESI, [EBP + 8]			;address of array
-	mov		ECX, ARRAYSIZE			;address of count
+	mov		ECX, [EBP+16]		;address of count
 	mov		EBX, 0
 
 	call	WriteString
@@ -243,7 +260,6 @@ exchangeElements PROC
 	mov		EBX, [ESI+4]
 	mov		[ESI+4], EAX
 	mov		[ESI], EBX
-	
 	pop		EBP
 	ret		
 exchangeElements ENDP
@@ -322,7 +338,6 @@ displayMedian PROC
 	_roundUp:
 		inc		EAX
 		call	WriteDec
-    ;     median = (array[n / 2] + array[(n / 2) - 1]) / 2
 
 	_return:
 		popad
@@ -330,5 +345,68 @@ displayMedian PROC
 		ret		12
 displayMedian ENDP
 
+;---------------------------------------------------------------
+;Name: countList
+;
+;This procedure displays the array with 20 numbers per line
+;
+;preconditions: none
+;
+;postconditions: 
+;
+;receives:	address of array on system stack
+;
+;returns: None
+;---------------------------------------------------------------
+
+countList PROC
+	;compare elements in rand array if numbers are equal increment count
+	
+	push	EBP
+	mov		EBP, ESP
+	mov		EBX, [EBP + 16]		;reset the array size pointer to new size
+	mov		EAX, HI
+	sub		EAX, LO
+	mov		[EBX], EAX
+	mov		ESI, [EBP + 8]		;randArray
+	mov		EBX, [ESI]
+	mov		EDI, [EBP + 12]		;countArray
+	mov		ECX, ARRAYSIZE
+	mov		EAX, LO
+	mov		EDX, 0
+		_count:
+			cmp		ECX, 0
+			je		_endCount
+			cmp		EBX, HI
+			jg		_endCount
+			cmp		EBX, EAX
+			je		_incrementCount
+			jne		_incrementList
+			
+			
+		_incrementCount:
+			add		ESI, 4
+			mov		EBX, [ESI]
+			inc		EDX
+			LOOP	_count
+			jmp		_endCount
+
+		_incrementList:
+			mov		DWORD PTR[EDI], EDX
+			mov		EDX, 0
+			add		EDI, 4
+			inc		EAX
+			inc		ECX
+			LOOP	_count
+
+
+			
+
+			
+	;if numbers are not equal move to the next pair
+_endCount:
+	pop	EBP
+	ret 12
+countList ENDP
 
 END main
