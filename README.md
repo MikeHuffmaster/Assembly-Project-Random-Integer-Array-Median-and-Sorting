@@ -1,12 +1,3 @@
-# Project 5 - Array, Median, and Sorted Array
-
-## Author
-Mike Huffmaster  
-Last Modified: 8/3/2023  
-OSU email address: Huffmasm@oregonstate.edu  
-Course number/section: CS271 Section 400  
-Project Number: Project 5  
-Due Date: 08/13/2023
 
 ## Description
 The user will be introduced to the program. This program will create a list of 200 random integers in the range of 15 to 50. The program will then display the median, the sorted list in ascending order, and the count of each number in the list.
@@ -36,4 +27,4 @@ The user will be introduced to the program. This program will create a list of 2
 ## Note
 This project uses the Irvine32 library for assembly programming. Ensure that the library is properly linked during the assembly process.
 
-For any questions or issues, feel free to contact the author at Huffmasm@oregonstate.edu.
+For any questions or issues, feel free to contact the author at Huffmasm@gmail.com
