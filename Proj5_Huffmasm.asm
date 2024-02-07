@@ -1,10 +1,3 @@
-TITLE Project 5     (Proj5_Huffmasm.asm)
-
-; Author: Mike Huffmaster
-; Last Modified:8/3/2023
-; OSU email address: Huffmasm@oregonstate.edu
-; Course number/section:   CS271 Section 400
-; Project Number:Project 5            Due Date:08/13/2023
 ; Description: The user will be introduced to the program. This program will create a list of 200 random 
 ;	integers in the range of 15 to 50. The program will then display the median, and the sorted list in ascending order. 
 ;	Lastly,the count of each number in the list will be displayed.
